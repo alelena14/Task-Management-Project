@@ -10,6 +10,8 @@ import com.example.taskmanagement.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.taskmanagement.exception.BusinessException;
+import com.example.taskmanagement.exception.UnauthorizedException;
 
 import java.time.LocalDateTime;
 
@@ -23,15 +25,15 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Email already exists");
         }
 
         User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.firstName())
+                .lastName(request.lastName())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
                 .active(true)
                 .createdAt(LocalDateTime.now())
@@ -42,14 +44,23 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() ->
+                        new UnauthorizedException("Invalid credentials")
+                );
+
+        // Deactivated users are not allowed to authenticate
+        if (!user.isActive()) {
+            throw new UnauthorizedException(
+                    "User account is deactivated"
+            );
+        }
 
         if (!passwordEncoder.matches(
-                request.getPassword(),
+                request.password(),
                 user.getPassword()
         )) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user.getEmail());
