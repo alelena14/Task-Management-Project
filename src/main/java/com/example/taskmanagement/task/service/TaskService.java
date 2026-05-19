@@ -1,8 +1,10 @@
 package com.example.taskmanagement.task.service;
 
+import com.example.taskmanagement.audit.entity.AuditAction;
+import com.example.taskmanagement.audit.service.AuditLogService;
 import com.example.taskmanagement.exception.BusinessException;
+import com.example.taskmanagement.exception.ForbiddenException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
-import com.example.taskmanagement.exception.UnauthorizedException;
 import com.example.taskmanagement.project.entity.Project;
 import com.example.taskmanagement.project.repository.ProjectRepository;
 import com.example.taskmanagement.task.dto.CreateTaskRequest;
@@ -17,6 +19,7 @@ import com.example.taskmanagement.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,19 +30,60 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
+    private final AuditLogService auditService;
 
     public TaskResponse create(CreateTaskRequest request) {
 
         User creator = getAuthenticatedUser();
 
-        Project project = projectRepository.findById(request.projectId())
+        Project project = projectRepository
+                .findByIdAndDeletedFalse(
+                        request.projectId()
+                )
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        boolean isAdmin =
+                creator.getRole() == Role.ADMIN;
+
+        boolean isOwner =
+                project.getOwner().getId().equals(creator.getId());
+
+        boolean isMember =
+                project.getMembers()
+                        .stream()
+                        .anyMatch(m -> m.getId().equals(creator.getId()));
+
+        if (!isAdmin && !isOwner && !isMember) {
+            throw new ForbiddenException(
+                    "Only project members can create tasks"
+            );
+        }
 
         User assignedUser = null;
 
         if (request.assignedUserId() != null) {
-            assignedUser = userRepository.findById(request.assignedUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+
+            assignedUser = userRepository
+                    .findByIdAndActiveTrue(
+                            request.assignedUserId()
+                    )
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Assigned user not found"
+                            ));
+
+            Long assignedUserId = assignedUser.getId();
+
+            boolean assignedIsMember = project.getMembers()
+                    .stream()
+                    .anyMatch(member ->
+                            member.getId().equals(assignedUserId));
+
+            if (!assignedIsMember) {
+                throw new ForbiddenException(
+                        "Assigned user must be a project member"
+                );
+            }
         }
 
         Task task = Task.builder()
@@ -53,14 +97,69 @@ public class TaskService {
                 .project(project)
                 .build();
 
-        taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        auditService.log(
+                AuditAction.CREATE_TASK,
+                "TASK",
+                savedTask.getId(),
+                creator.getEmail()
+        );
 
         return mapToResponse(task);
     }
 
     public List<TaskResponse> getAll() {
 
-        return taskRepository.findByDeletedFalse()
+        User user = getAuthenticatedUser();
+
+        List<Task> tasks;
+
+        if (user.getRole() == Role.ADMIN) {
+            tasks = taskRepository.findByDeletedFalse();
+        } else {
+            tasks = taskRepository
+                    .findByProjectMembersIdAndDeletedFalse(
+                            user.getId()
+                    );
+        }
+
+        return tasks.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getProjectTasks(Long projectId) {
+
+        User user = getAuthenticatedUser();
+
+        Project project = projectRepository
+                .findByIdAndDeletedFalse(
+                        projectId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Project not found"
+                        ));
+
+        boolean isAdmin =
+                user.getRole() == Role.ADMIN;
+
+        boolean isMember =
+                project.getMembers()
+                        .stream()
+                        .anyMatch(member ->
+                                member.getId().equals(user.getId()));
+
+        if (!isAdmin && !isMember) {
+            throw new ForbiddenException(
+                    "You cannot access this project"
+            );
+        }
+
+        return taskRepository
+                .findByProjectIdAndDeletedFalse(projectId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -70,8 +169,12 @@ public class TaskService {
 
         User currentUser = getAuthenticatedUser();
 
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        Task task = taskRepository
+                .findByIdAndDeletedFalse(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Task not found"
+                        ));
 
         boolean isAdmin = currentUser.getRole() == Role.ADMIN;
 
@@ -109,8 +212,29 @@ public class TaskService {
 
             if (request.assignedUserId() != null) {
 
-                User assignedUser = userRepository.findById(request.assignedUserId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+                User assignedUser =
+                        userRepository
+                                .findByIdAndActiveTrue(
+                                        request.assignedUserId()
+                                )
+                                .orElseThrow(() ->
+                                        new ResourceNotFoundException(
+                                                "Assigned user not found"
+                                        ));
+
+                boolean assignedIsMember =
+                        task.getProject()
+                                .getMembers()
+                                .stream()
+                                .anyMatch(member ->
+                                        member.getId()
+                                                .equals(assignedUser.getId()));
+
+                if (!assignedIsMember) {
+                    throw new ForbiddenException(
+                            "Assigned user must be a project member"
+                    );
+                }
 
                 task.setAssignedUser(assignedUser);
             }
@@ -127,7 +251,7 @@ public class TaskService {
                             request.assignedUserId() != null;
 
             if (tryingToUpdateOtherFields) {
-                throw new UnauthorizedException(
+                throw new ForbiddenException(
                         "Assigned user can only update task status"
                 );
             }
@@ -141,10 +265,17 @@ public class TaskService {
 
         // NO ACCESS
         else {
-            throw new UnauthorizedException("You are not allowed to update this task");
+            throw new ForbiddenException("You are not allowed to update this task");
         }
 
-        taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        auditService.log(
+                AuditAction.UPDATE_TASK,
+                "TASK",
+                savedTask.getId(),
+                currentUser.getEmail()
+        );
 
         return mapToResponse(task);
     }
@@ -153,8 +284,12 @@ public class TaskService {
 
         User currentUser = getAuthenticatedUser();
 
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        Task task = taskRepository
+                .findByIdAndDeletedFalse(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Task not found"
+                        ));
 
         boolean isAdmin = currentUser.getRole() == Role.ADMIN;
 
@@ -163,12 +298,21 @@ public class TaskService {
                 .equals(currentUser.getId());
 
         if (!isAdmin && !isOwner) {
-            throw new UnauthorizedException("You are not allowed to delete this task");
+            throw new ForbiddenException(
+                    "You are not allowed to delete this task"
+            );
         }
 
         task.setDeleted(true);
 
-        taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        auditService.log(
+                AuditAction.DELETE_TASK,
+                "TASK",
+                savedTask.getId(),
+                currentUser.getEmail()
+        );
     }
 
     // internal service methods
@@ -178,8 +322,12 @@ public class TaskService {
                 .getAuthentication()
                 .getName();
 
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("User not found"));
+        return userRepository
+                .findByEmailAndActiveTrue(email)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                "User not found"
+                        ));
     }
 
     private TaskResponse mapToResponse(Task task) {

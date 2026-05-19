@@ -1,7 +1,10 @@
 package com.example.taskmanagement.project.service;
 
+import com.example.taskmanagement.audit.entity.AuditAction;
+import com.example.taskmanagement.audit.entity.AuditLog;
+import com.example.taskmanagement.audit.service.AuditLogService;
+import com.example.taskmanagement.exception.ForbiddenException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
-import com.example.taskmanagement.exception.UnauthorizedException;
 import com.example.taskmanagement.project.dto.AddMemberRequest;
 import com.example.taskmanagement.project.dto.CreateProjectRequest;
 import com.example.taskmanagement.project.dto.ProjectResponse;
@@ -29,6 +32,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditService;
 
     @Override
     public ProjectResponse createProject(CreateProjectRequest request) {
@@ -47,6 +51,13 @@ public class ProjectServiceImpl implements ProjectService {
         project.getMembers().add(currentUser);
 
         Project savedProject = projectRepository.save(project);
+
+        auditService.log(
+                AuditAction.CREATE_PROJECT,
+                "PROJECT",
+                savedProject.getId(),
+                currentUser.getEmail()
+        );
 
         return mapToResponse(savedProject);
     }
@@ -89,7 +100,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // Regular users can access only projects where they are members
         if (!isMember && !isAdmin) {
-            throw new UnauthorizedException(
+            throw new ForbiddenException(
                     "You are not a member of this project"
             );
         }
@@ -114,7 +125,7 @@ public class ProjectServiceImpl implements ProjectService {
                 currentUser.getRole() == Role.ADMIN;
 
         if (!isOwner && !isAdmin) {
-            throw new UnauthorizedException(
+            throw new ForbiddenException(
                     "Only owner or admin can update project"
             );
         }
@@ -133,6 +144,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project updatedProject =
                 projectRepository.save(project);
+
+        auditService.log(
+                AuditAction.UPDATE_PROJECT,
+                "PROJECT",
+                project.getId(),
+                currentUser.getEmail()
+        );
 
         return mapToResponse(updatedProject);
     }
@@ -153,7 +171,7 @@ public class ProjectServiceImpl implements ProjectService {
                 currentUser.getRole() == Role.ADMIN;
 
         if (!isOwner && !isAdmin) {
-            throw new UnauthorizedException(
+            throw new ForbiddenException(
                     "Only owner or admin can delete project"
             );
         }
@@ -161,6 +179,13 @@ public class ProjectServiceImpl implements ProjectService {
         project.setDeleted(true);
 
         projectRepository.save(project);
+
+        auditService.log(
+                AuditAction.DELETE_PROJECT,
+                "PROJECT",
+                project.getId(),
+                currentUser.getEmail()
+        );
     }
 
     @Override
@@ -180,12 +205,15 @@ public class ProjectServiceImpl implements ProjectService {
                 currentUser.getRole() == Role.ADMIN;
 
         if (!isOwner && !isAdmin) {
-            throw new UnauthorizedException(
+            throw new ForbiddenException(
                     "Only owner or admin can add members"
             );
         }
 
-        User user = userRepository.findById(request.userId())
+        User user = userRepository
+                .findByIdAndActiveTrue(
+                        request.userId()
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "User not found"
@@ -194,19 +222,28 @@ public class ProjectServiceImpl implements ProjectService {
         project.getMembers().add(user);
 
         projectRepository.save(project);
+
+        auditService.log(
+                AuditAction.ADD_MEMBER,
+                "PROJECT",
+                project.getId(),
+                currentUser.getEmail()
+        );
     }
 
     // internal service methods
+    @Transactional(readOnly = true)
     private Project getProject(Long projectId) {
 
-        return projectRepository.findById(projectId)
-                .filter(project -> !project.getDeleted())
+        return projectRepository
+                .findByIdAndDeletedFalse(projectId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Project not found"
                         ));
     }
 
+    @Transactional(readOnly = true)
     private User getCurrentUser() {
 
         Authentication authentication =

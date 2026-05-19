@@ -5,6 +5,8 @@ import com.example.taskmanagement.project.dto.CreateProjectRequest;
 import com.example.taskmanagement.project.dto.ProjectResponse;
 import com.example.taskmanagement.project.dto.UpdateProjectRequest;
 import com.example.taskmanagement.project.service.ProjectService;
+import com.example.taskmanagement.task.dto.TaskResponse;
+import com.example.taskmanagement.task.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final TaskService taskService;
 
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(
@@ -77,5 +80,15 @@ public class ProjectController {
         projectService.addMember(projectId, request);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{projectId}/tasks")
+    public ResponseEntity<List<TaskResponse>> getProjectTasks(
+            @PathVariable Long projectId
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.getProjectTasks(projectId)
+        );
     }
 }

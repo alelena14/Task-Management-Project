@@ -1,5 +1,7 @@
 package com.example.taskmanagement.auth.service;
 
+import com.example.taskmanagement.audit.entity.AuditAction;
+import com.example.taskmanagement.audit.service.AuditLogService;
 import com.example.taskmanagement.security.JwtService;
 import com.example.taskmanagement.user.dto.AuthResponse;
 import com.example.taskmanagement.user.dto.LoginRequest;
@@ -22,6 +24,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditLogService auditService;
 
     public void register(RegisterRequest request) {
 
@@ -40,6 +43,13 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+
+        auditService.log(
+                AuditAction.REGISTER,
+                "USER",
+                user.getId(),
+                user.getEmail()
+        );
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -64,6 +74,13 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user.getEmail());
+
+        auditService.log(
+                AuditAction.LOGIN,
+                "AUTH",
+                user.getId(),
+                user.getEmail()
+        );
 
         return new AuthResponse(token);
     }

@@ -8,19 +8,19 @@ import java.time.LocalDateTime;
 
 public record CreateTaskRequest(
 
-        @NotBlank
+        @NotBlank(message = "Title is required")
         String title,
 
         String description,
 
-        @NotNull
+        @NotNull(message = "Priority is required")
         TaskPriority priority,
 
         LocalDateTime deadline,
 
         Long assignedUserId,
 
-        @NotNull
+        @NotNull(message = "Project id is required")
         Long projectId
 ) {
 }
