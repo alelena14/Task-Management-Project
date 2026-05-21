@@ -4,6 +4,7 @@ import com.example.taskmanagement.auth.service.AuthService;
 import com.example.taskmanagement.user.dto.AuthResponse;
 import com.example.taskmanagement.user.dto.LoginRequest;
 import com.example.taskmanagement.user.dto.RegisterRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(
+            @Valid
             @RequestBody RegisterRequest request
     ) {
 
@@ -30,6 +32,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
+            @Valid
             @RequestBody LoginRequest request
     ) {
 

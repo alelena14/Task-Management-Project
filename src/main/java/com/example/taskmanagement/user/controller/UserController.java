@@ -50,7 +50,6 @@ public class UserController {
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateUserRole(
-            Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody UpdateRoleRequest request
     ) {
