@@ -33,6 +33,6 @@ build/
 .vscode/
 
 # Environment files
-src/main/resources/application.properties
 .env
 *.log
+docker-compose.local.yml

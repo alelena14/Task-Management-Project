@@ -2,6 +2,7 @@ package com.example.taskmanagement.exception;
 
 import com.example.taskmanagement.audit.entity.AuditAction;
 import com.example.taskmanagement.audit.service.AuditLogService;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -202,6 +203,32 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Invalid request data",
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .badRequest()
+                .body(error);
+    }
+
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            InvalidDataAccessApiUsageException.class
+    })
+    public ResponseEntity<ErrorResponse> handleBadRequest(
+            Exception ex
+    ) {
+
+        auditService.log(
+                AuditAction.VALIDATION_ERROR,
+                "REQUEST",
+                null,
+                getCurrentUserEmail()
+        );
+
+        ErrorResponse error = new ErrorResponse(
+                400,
+                ex.getMessage(),
                 LocalDateTime.now()
         );
 

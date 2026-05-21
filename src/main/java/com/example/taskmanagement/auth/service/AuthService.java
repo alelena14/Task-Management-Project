@@ -32,12 +32,20 @@ public class AuthService {
             throw new BusinessException("Email already exists");
         }
 
+        Role role;
+
+        if (userRepository.count() == 0) {
+            role = Role.ADMIN;
+        } else {
+            role = Role.USER;
+        }
+
         User user = User.builder()
                 .firstName(request.firstName())
                 .lastName(request.lastName())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .role(Role.USER)
+                .role(role)
                 .active(true)
                 .createdAt(LocalDateTime.now())
                 .build();

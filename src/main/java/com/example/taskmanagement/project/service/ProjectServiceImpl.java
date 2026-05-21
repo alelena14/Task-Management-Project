@@ -5,13 +5,12 @@ import com.example.taskmanagement.audit.entity.AuditLog;
 import com.example.taskmanagement.audit.service.AuditLogService;
 import com.example.taskmanagement.exception.ForbiddenException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
-import com.example.taskmanagement.project.dto.AddMemberRequest;
-import com.example.taskmanagement.project.dto.CreateProjectRequest;
-import com.example.taskmanagement.project.dto.ProjectResponse;
-import com.example.taskmanagement.project.dto.UpdateProjectRequest;
+import com.example.taskmanagement.project.dto.*;
 import com.example.taskmanagement.project.entity.Project;
 import com.example.taskmanagement.project.entity.ProjectStatus;
 import com.example.taskmanagement.project.repository.ProjectRepository;
+import com.example.taskmanagement.task.entity.TaskStatus;
+import com.example.taskmanagement.task.repository.TaskRepository;
 import com.example.taskmanagement.user.entity.Role;
 import com.example.taskmanagement.user.entity.User;
 import com.example.taskmanagement.user.repository.UserRepository;
@@ -33,6 +32,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final AuditLogService auditService;
+    private final TaskRepository taskRepository;
 
     @Override
     public ProjectResponse createProject(CreateProjectRequest request) {
@@ -153,6 +153,81 @@ public class ProjectServiceImpl implements ProjectService {
         );
 
         return mapToResponse(updatedProject);
+    }
+
+    @Override
+    public ProjectStatsResponse
+    getProjectStats(
+            Long projectId
+    ) {
+
+        User currentUser = getCurrentUser();
+
+        Project project =
+                projectRepository
+                        .findByIdAndDeletedFalse(
+                                projectId
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Project not found"
+                                ));
+
+        boolean isAdmin =
+                currentUser.getRole()
+                        == Role.ADMIN;
+
+        boolean isMember =
+                project.getMembers()
+                        .stream()
+                        .anyMatch(member ->
+                                member.getId()
+                                        .equals(
+                                                currentUser.getId()
+                                        ));
+
+        if (!isAdmin && !isMember) {
+
+            throw new ForbiddenException(
+                    "Access denied"
+            );
+        }
+
+        long total =
+                taskRepository
+                        .countByProjectIdAndDeletedFalse(
+                                projectId
+                        );
+
+        long todo =
+                taskRepository
+                        .countByProjectIdAndStatusAndDeletedFalse(
+                                projectId,
+                                TaskStatus.TODO
+                        );
+
+        long inProgress =
+                taskRepository
+                        .countByProjectIdAndStatusAndDeletedFalse(
+                                projectId,
+                                TaskStatus.IN_PROGRESS
+                        );
+
+        long done =
+                taskRepository
+                        .countByProjectIdAndStatusAndDeletedFalse(
+                                projectId,
+                                TaskStatus.DONE
+                        );
+
+        return new ProjectStatsResponse(
+                project.getId(),
+                project.getName(),
+                total,
+                todo,
+                inProgress,
+                done
+        );
     }
 
     @Override

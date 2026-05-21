@@ -1,9 +1,6 @@
 package com.example.taskmanagement.project.controller;
 
-import com.example.taskmanagement.project.dto.AddMemberRequest;
-import com.example.taskmanagement.project.dto.CreateProjectRequest;
-import com.example.taskmanagement.project.dto.ProjectResponse;
-import com.example.taskmanagement.project.dto.UpdateProjectRequest;
+import com.example.taskmanagement.project.dto.*;
 import com.example.taskmanagement.project.service.ProjectService;
 import com.example.taskmanagement.task.dto.TaskResponse;
 import com.example.taskmanagement.task.service.TaskService;
@@ -90,5 +87,16 @@ public class ProjectController {
         return ResponseEntity.ok(
                 taskService.getProjectTasks(projectId)
         );
+    }
+
+    @GetMapping("/{id}/stats")
+    public ProjectStatsResponse
+    getProjectStats(
+
+            @PathVariable Long id
+    ) {
+
+        return projectService
+                .getProjectStats(id);
     }
 }

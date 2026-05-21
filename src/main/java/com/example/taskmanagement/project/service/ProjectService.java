@@ -1,9 +1,6 @@
 package com.example.taskmanagement.project.service;
 
-import com.example.taskmanagement.project.dto.AddMemberRequest;
-import com.example.taskmanagement.project.dto.CreateProjectRequest;
-import com.example.taskmanagement.project.dto.ProjectResponse;
-import com.example.taskmanagement.project.dto.UpdateProjectRequest;
+import com.example.taskmanagement.project.dto.*;
 
 import java.util.List;
 
@@ -17,6 +14,8 @@ public interface ProjectService {
 
     ProjectResponse updateProject(Long projectId,
                                   UpdateProjectRequest request);
+
+    ProjectStatsResponse getProjectStats(Long projectId);
 
     void deleteProject(Long projectId);
 
