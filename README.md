@@ -204,4 +204,4 @@ The application uses:
 
 ## API Documentation
 
-Swagger UI: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+Swagger UI: [https://swagger.io/docs/](https://swagger.io/docs/)
