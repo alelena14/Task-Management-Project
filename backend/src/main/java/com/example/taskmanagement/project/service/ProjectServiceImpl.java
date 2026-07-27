@@ -341,6 +341,15 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(User::getEmail)
                 .collect(Collectors.toSet());
 
+        long total = taskRepository.countByProjectIdAndDeletedFalse(project.getId());
+
+        long done = taskRepository.countByProjectIdAndStatusAndDeletedFalse(
+                project.getId(),
+                TaskStatus.DONE
+        );
+
+        int progress = total == 0 ? 0 : (int) (done * 100 / total);
+
         return new ProjectResponse(
                 project.getId(),
                 project.getName(),
@@ -348,6 +357,7 @@ public class ProjectServiceImpl implements ProjectService {
                 project.getStatus(),
                 project.getOwner().getEmail(),
                 members,
+                progress,
                 project.getCreatedAt()
         );
     }

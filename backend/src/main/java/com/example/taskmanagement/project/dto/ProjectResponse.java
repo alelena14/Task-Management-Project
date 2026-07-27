@@ -12,5 +12,6 @@ public record ProjectResponse(
         ProjectStatus status,
         String ownerEmail,
         Set<String> members,
+        int progress,
         LocalDateTime createdAt
 ) {}
