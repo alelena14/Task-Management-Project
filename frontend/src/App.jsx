@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import HomePage from "./pages/HomePage/HomePage.jsx";
 import RegisterPage from "./pages/RegisterPage/RegisterPage.jsx";
 import LoginPage from "./pages/LoginPage/LoginPage.jsx";
 import ProtectedRoute from "./ProtectedRoutes.jsx";
@@ -18,6 +19,7 @@ export default function App() {
                     path="/home"
                     element={
                         <ProtectedRoute>
+                            <HomePage />
                         </ProtectedRoute>
                     }
                 />
