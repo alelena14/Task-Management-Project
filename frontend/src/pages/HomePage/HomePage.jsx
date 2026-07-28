@@ -4,6 +4,7 @@ import TaskCard from "./components/TaskCard.jsx";
 import ProjectCard from "./components/ProjectCard.jsx";
 import {ProjectSidebar} from "./components/ProjectSidebar.jsx";
 import {TaskSidebar} from "./components/TaskSidebar.jsx";
+import {useNavigate} from "react-router-dom";
 
 function HomePage() {
 
@@ -11,6 +12,7 @@ function HomePage() {
     const [tasks, setTasks] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
+    const navigate = useNavigate();
 
     const pickTask = (task) => {
         setSelectedTask(task);
@@ -40,7 +42,7 @@ function HomePage() {
                 }
 
                 const data = await response.json();
-                setProjects(data);
+                setProjects(data.slice(0, 3));
 
             } catch (error) {
                 console.error(error);
@@ -68,7 +70,7 @@ function HomePage() {
                 }
 
                 const data = await response.json();
-                setTasks(data.content);
+                setTasks(data.content.slice(0, 3));
 
             } catch (error) {
                 console.error(error);
@@ -94,12 +96,20 @@ function HomePage() {
                 </div>
 
                 {/* Projects */}
-                <div className="flex flex-col gap-4 p-4">
-                    <p className=" text-xl text-[#34113F] font-rotunda">
-                        Active projects
-                    </p>
+                <div className="flex flex-col gap-4 p-4 max-w-5xl">
+                    <div className="flex flex-row gap-2 justify-between">
+                        <p className=" text-xl text-[#34113F] font-rotunda">
+                            Your Projects
+                        </p>
 
-                    <div className="flex flex-wrap gap-4">
+                        <p className=" text- text-[#34113F] font-fabrikat underline underline-offset-6 decoration-1 cursor-pointer pr-8"
+                           onClick={() => navigate('/projects')}
+                        >
+                            VIEW ALL
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-8">
                         {projects.map(project => (
                             <ProjectCard
                                 key={project.id}
@@ -110,7 +120,6 @@ function HomePage() {
                             />
                         ))}
                     </div>
-
                 </div>
 
 

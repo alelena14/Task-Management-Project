@@ -4,6 +4,8 @@ import HomePage from "./pages/HomePage/HomePage.jsx";
 import RegisterPage from "./pages/RegisterPage/RegisterPage.jsx";
 import LoginPage from "./pages/LoginPage/LoginPage.jsx";
 import ProtectedRoute from "./ProtectedRoutes.jsx";
+import ProjectPage from "./pages/ProjectPage/ProjectsPage.jsx";
+
 
 
 export default function App() {
@@ -20,6 +22,15 @@ export default function App() {
                     element={
                         <ProtectedRoute>
                             <HomePage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/projects"
+                    element={
+                        <ProtectedRoute>
+                            <ProjectPage />
                         </ProtectedRoute>
                     }
                 />

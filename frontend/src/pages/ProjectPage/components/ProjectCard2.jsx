@@ -1,6 +1,7 @@
 import React from "react";
+import {ArrowRightIcon} from "lucide-react";
 
-export default function ProjectCard({ project, onClick, active }) {
+export default function ProjectCard2({ project, onClick, active }) {
 
     const {
         id,
@@ -14,8 +15,8 @@ export default function ProjectCard({ project, onClick, active }) {
     return (
         <button
             onClick={onClick}
-            className={`relative w-70 h-56 bg-white border p-4 shadow hover:shadow-lg gap-2 transition flex flex-col ${
-             active ? "border-slate-900 shadow-md" : "border"
+            className={`relative w-80 bg-[#f8f9ff] border p-4 shadow hover:shadow-lg gap-2 transition flex flex-col cursor-pointer ${
+                active ? "border-slate-900 shadow-md" : "border"
             }`}
         >
             <span className="text-xs text-gray-500 text-left font-fabrikat">
@@ -32,7 +33,7 @@ export default function ProjectCard({ project, onClick, active }) {
                 {name}
             </p>
 
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+            <p className="mt-2 text-sm text-gray-600 text-left">
                 {description}
             </p>
 
@@ -50,9 +51,24 @@ export default function ProjectCard({ project, onClick, active }) {
                 </div>
             </div>
 
-            <p className="mt-4 text-xs text-gray-500 text-left">
-                {members.length} members
-            </p>
+            <div className="flex flex-row justify-between mt-auto border-t border-gray-200 pt-4">
+                <div className="flex flex-row -space-x-2">
+                    {members.map((m) => (
+                        <div
+                            key={m}
+                            title={m}
+                            className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[11px] font-medium text-slate-600"
+                        >
+                            {m.slice(0, 2).toUpperCase()}
+                        </div>
+                    ))}
+                </div>
+
+                <div>
+                    <ArrowRightIcon className="w-8 h-8 text-[#34113F]" />
+                </div>
+
+            </div>
 
         </button>
     );
