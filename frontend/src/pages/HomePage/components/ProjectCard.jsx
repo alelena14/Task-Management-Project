@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ProjectCard({ project, onClick }) {
+export default function ProjectCard({ project, onClick, active }) {
 
     const {
         id,
@@ -13,8 +13,10 @@ export default function ProjectCard({ project, onClick }) {
 
     return (
         <button
-            onClick={() => onClick?.(id)}
-            className=" relative w-60 bg-white border p-4 shadow hover:shadow-lg gap-2 transition flex flex-col"
+            onClick={onClick}
+            className={`relative w-70 bg-white border p-4 shadow hover:shadow-lg gap-2 transition flex flex-col ${
+             active ? "border-slate-900 shadow-md" : "border"
+            }`}
         >
             <span className="text-xs text-gray-500 text-left font-fabrikat">
                     PROJ-{id}
