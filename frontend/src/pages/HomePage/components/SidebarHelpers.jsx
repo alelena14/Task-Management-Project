@@ -14,7 +14,7 @@ export function Sidebar({ open, onClose, children }) {
 
     return (
         <div
-            className={`fixed inset-0 top-16 z-40 ${
+            className={`fixed inset-0 top-16 z-40 bg-[#220b29]/40 backdrop-blur-xs ${
                 open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}
         >

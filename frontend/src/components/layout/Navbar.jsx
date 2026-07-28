@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import {
     FiBell,
     FiSettings
@@ -11,7 +12,7 @@ function Navbar() {
                 {/* Left */}
                 <div className="flex items-center gap-10">
                     <Link
-                        to="/"
+                        to="/home"
                         className="text-2xl font-bold text-slate-900"
                     >
                         DevZen
