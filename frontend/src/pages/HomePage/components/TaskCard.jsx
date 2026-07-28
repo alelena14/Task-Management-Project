@@ -50,9 +50,9 @@ export default function TaskCard({ task, onClick, isFirst }) {
 
     return (
         <button
-            onClick={() => onClick?.(id)}
+            onClick={onClick}
             className={`
-              relative w-124 h-20 bg-white
+              relative w-xl h-20 bg-white
               border-x border-b
               ${isFirst ? "border-t" : ""}
               border-[#cfc3cd]

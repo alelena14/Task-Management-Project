@@ -6,7 +6,7 @@ import {
 
 function Navbar() {
     return (
-        <nav className="w-full border-b bg-white">
+        <nav className="w-full sticky top-0 border-b z-40 bg-white">
             <div className="mx-6 flex h-16 items-center justify-between px-4">
                 {/* Left */}
                 <div className="flex items-center gap-10">

@@ -2,11 +2,24 @@ import Navbar from '../../components/layout/Navbar.jsx'
 import React, {useEffect, useState} from "react";
 import TaskCard from "./components/TaskCard.jsx";
 import ProjectCard from "./components/ProjectCard.jsx";
+import {ProjectSidebar} from "./components/ProjectSidebar.jsx";
+import {TaskSidebar} from "./components/TaskSidebar.jsx";
 
 function HomePage() {
 
     const [projects, setProjects] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [selectedProject, setSelectedProject] = useState(null);
+
+    const pickTask = (task) => {
+        setSelectedTask(task);
+        setSelectedProject(null);
+    };
+    const pickProject = (project) => {
+        setSelectedProject(project);
+        setSelectedTask(null);
+    };
 
 
     useEffect(() => {
@@ -71,7 +84,7 @@ function HomePage() {
 
             <div className="min-h-screen flex flex-col p-4">
                 {/* Page title */}
-                <div className="flex flex-col gap-2 p-4">
+                <div className="flex flex-col gap-2 px-4">
                     <p className=" text-4xl text-[#34113F] font-rotunda">
                         Workspace Overview
                     </p>
@@ -80,7 +93,7 @@ function HomePage() {
                     </p>
                 </div>
 
-                {/* Active projects */}
+                {/* Projects */}
                 <div className="flex flex-col gap-4 p-4">
                     <p className=" text-xl text-[#34113F] font-rotunda">
                         Active projects
@@ -91,7 +104,9 @@ function HomePage() {
                             <ProjectCard
                                 key={project.id}
                                 project={project}
-                                onClick={(id) => console.log(id)}
+                                active={selectedProject?.id === project.id}
+                                onClick={() => pickProject(project)}
+
                             />
                         ))}
                     </div>
@@ -117,7 +132,7 @@ function HomePage() {
                                         key={task.id}
                                         task={task}
                                         isFirst={index === 0}
-                                        onClick={(id) => console.log(id)}
+                                        onClick={() => pickTask(task)}
                                     />
                                 ))}
                             </div>
@@ -126,6 +141,10 @@ function HomePage() {
                     </div>
                 </div>
             </div>
+
+            <ProjectSidebar project={selectedProject} onClose={() => setSelectedProject(null)} />
+            <TaskSidebar task={selectedTask} onClose={() => setSelectedTask(null)} />
+
         </div> )
 }
 
