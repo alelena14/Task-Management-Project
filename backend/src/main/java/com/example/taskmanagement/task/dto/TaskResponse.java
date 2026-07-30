@@ -12,7 +12,8 @@ public record TaskResponse(
         TaskPriority priority,
         TaskStatus status,
         LocalDateTime deadline,
-        String assignedUser,
+        Long assignedUserId,
+        String assignedUserName,
         String creator,
         Long projectId,
         LocalDateTime createdAt

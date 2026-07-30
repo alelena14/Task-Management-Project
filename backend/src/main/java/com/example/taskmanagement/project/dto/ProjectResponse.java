@@ -10,8 +10,9 @@ public record ProjectResponse(
         String name,
         String description,
         ProjectStatus status,
-        String ownerEmail,
-        Set<String> members,
+        Long ownerId,
+        String ownerName,
+        Set<ProjectMemberResponse> members,
         int progress,
         LocalDateTime createdAt
 ) {}

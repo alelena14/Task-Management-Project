@@ -9,6 +9,7 @@ import com.example.taskmanagement.project.dto.*;
 import com.example.taskmanagement.project.entity.Project;
 import com.example.taskmanagement.project.entity.ProjectStatus;
 import com.example.taskmanagement.project.repository.ProjectRepository;
+import com.example.taskmanagement.task.entity.Task;
 import com.example.taskmanagement.task.entity.TaskStatus;
 import com.example.taskmanagement.task.repository.TaskRepository;
 import com.example.taskmanagement.user.entity.Role;
@@ -20,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -193,32 +196,33 @@ public class ProjectServiceImpl implements ProjectService {
             );
         }
 
-        long total =
-                taskRepository
-                        .countByProjectIdAndDeletedFalse(
-                                projectId
-                        );
+        List<Task> tasks =
+                taskRepository.findByProjectIdAndDeletedFalse(projectId);
 
-        long todo =
-                taskRepository
-                        .countByProjectIdAndStatusAndDeletedFalse(
-                                projectId,
-                                TaskStatus.TODO
-                        );
+        LocalDate today = LocalDate.now();
 
-        long inProgress =
-                taskRepository
-                        .countByProjectIdAndStatusAndDeletedFalse(
-                                projectId,
-                                TaskStatus.IN_PROGRESS
-                        );
+        long total = tasks.size();
 
-        long done =
-                taskRepository
-                        .countByProjectIdAndStatusAndDeletedFalse(
-                                projectId,
-                                TaskStatus.DONE
-                        );
+        long todo = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.TODO)
+                .count();
+
+        long inProgress = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.IN_PROGRESS)
+                .count();
+
+        long done = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.DONE)
+                .count();
+
+        long overdue = tasks.stream()
+                .filter(task -> {
+                    LocalDate deadline = task.getDeadline().toLocalDate();
+
+                    return task.getStatus() != TaskStatus.DONE
+                            && deadline.isBefore(today);
+                })
+                .count();
 
         return new ProjectStatsResponse(
                 project.getId(),
@@ -226,6 +230,7 @@ public class ProjectServiceImpl implements ProjectService {
                 total,
                 todo,
                 inProgress,
+                overdue,
                 done
         );
     }
@@ -286,9 +291,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         User user = userRepository
-                .findByIdAndActiveTrue(
-                        request.userId()
-                )
+                .findByEmailAndActiveTrue(request.userEmail())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "User not found"
@@ -336,9 +339,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     private ProjectResponse mapToResponse(Project project) {
 
-        Set<String> members = project.getMembers()
+        Set<ProjectMemberResponse> members = project.getMembers()
                 .stream()
-                .map(User::getEmail)
+                .map(user -> new ProjectMemberResponse(
+                        user.getId(),
+                        user.getFirstName() + " " + user.getLastName()
+                ))
                 .collect(Collectors.toSet());
 
         long total = taskRepository.countByProjectIdAndDeletedFalse(project.getId());
@@ -355,7 +361,8 @@ public class ProjectServiceImpl implements ProjectService {
                 project.getName(),
                 project.getDescription(),
                 project.getStatus(),
-                project.getOwner().getEmail(),
+                project.getOwner().getId(),
+                project.getOwner().getFirstName() + " " + project.getOwner().getLastName(),
                 members,
                 progress,
                 project.getCreatedAt()

@@ -48,6 +48,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             Pageable pageable
     );
 
+    List<Task> findByAssignedUserIdAndDeletedFalse(
+            Long userId
+    );
+
     long countByProjectIdAndDeletedFalse(
             Long projectId
     );

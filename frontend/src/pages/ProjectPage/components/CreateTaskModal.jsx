@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { useCreateProject } from "../../../hooks/useProject.js";
+import { useCreateTask } from "../../../hooks/useTasks.jsx";
 
-function CreateProjectModal({ isOpen, onClose, onProjectCreated }) {
-	const modalRef = useRef(null);
-	const [name, setName] = useState("");
+function CreateTaskModal({ isOpen, onClose, onTaskCreated, project }) {
+	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
+	const [priority, setPriority] = useState("LOW");
+	const [deadline, setDeadline] = useState("");
+	const [assignedUserId, setAssignedUserId] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
-	const createProjectMutation = useCreateProject();
+	const modalRef = useRef(null);
+	const createTaskMutation = useCreateTask();
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -27,19 +29,26 @@ function CreateProjectModal({ isOpen, onClose, onProjectCreated }) {
 		}
 	};
 
-	const handleCreateProject = async () => {
-		if (!name.trim()) return;
+	const handleCreateTask = async () => {
+		if (!title) return;
 
 		setIsSubmitting(true);
 
 		try {
-			await createProjectMutation.mutateAsync({
-				name,
+			await createTaskMutation.mutateAsync({
+				title,
 				description,
+				priority,
+				deadline,
+				assignedUserId,
+				projectId: project.id,
 			});
 
-			setName("");
+			setTitle("");
 			setDescription("");
+			setPriority("LOW");
+			setDeadline("");
+			setAssignedUserId("");
 
 			onClose();
 		} catch (error) {
@@ -75,13 +84,13 @@ function CreateProjectModal({ isOpen, onClose, onProjectCreated }) {
 				<div className="flex flex-col gap-5 px-6 py-6">
 					<div className="flex flex-col gap-2">
 						<label className="text-xs font-fabrikat tracking-wide text-gray-500 uppercase">
-							Project Name
+							Task Title
 						</label>
 						<input
 							type="text"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							placeholder="e.g. Quantum Neural Bridge"
+							value={title}
+							onChange={(e) => setTitle(e.target.value)}
+							placeholder="e.g. Plan the Quantum Neural Bridge"
 							className="w-full bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#34113F]"
 						/>
 					</div>
@@ -93,21 +102,72 @@ function CreateProjectModal({ isOpen, onClose, onProjectCreated }) {
 						<textarea
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
-							placeholder="Briefly describe the project goals..."
+							placeholder="Briefly describe the task goals..."
 							rows={4}
 							className="w-full bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 resize-none focus:outline-none focus:ring-1 focus:ring-[#34113F]"
 						/>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<label className="text-xs font-fabrikat tracking-wide text-gray-500 uppercase">
+							Priority
+						</label>
+
+						<select
+							value={priority}
+							onChange={(e) => setPriority(e.target.value)}
+							className="bg-white border border-gray-300 px-3 py-2 text-sm"
+						>
+							<option value="LOW">Low</option>
+							<option value="MEDIUM">Medium</option>
+							<option value="HIGH">High</option>
+						</select>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<label className="text-xs font-fabrikat tracking-wide text-gray-500 uppercase">
+							Deadline
+						</label>
+
+						<input
+							type="datetime-local"
+							value={deadline}
+							onChange={(e) => setDeadline(e.target.value)}
+							className="bg-white border border-gray-300 px-3 py-2 text-sm"
+						/>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<label className="text-xs font-fabrikat tracking-wide text-gray-500 uppercase">
+							Assigned User
+						</label>
+
+						<select
+							value={assignedUserId}
+							onChange={(e) =>
+								setAssignedUserId(Number(e.target.value))
+							}
+							className="bg-white border border-gray-300 px-3 py-2 text-sm"
+						>
+							<option value="">Select a member...</option>
+
+							{project.members.map((member) => (
+								<option key={member.id} value={member.id}>
+									{member.fullName}
+								</option>
+							))}
+						</select>
 					</div>
 				</div>
 
 				{/* Footer */}
 				<div className="flex gap-3 px-6 pb-6">
 					<button
-						onClick={handleCreateProject}
+						onClick={handleCreateTask}
 						disabled={isSubmitting}
 						className="flex-1 bg-[#34113F] text-white text-sm font-fabrikat tracking-wide py-2.5 hover:bg-[#4a1b58] disabled:opacity-50 transition cursor-pointer"
 					>
-						{isSubmitting ? "CREATING..." : "CREATE PROJECT"}
+						{isSubmitting ? "CREATING..." : "CREATE TASK"}
 					</button>
 
 					<button
@@ -122,4 +182,4 @@ function CreateProjectModal({ isOpen, onClose, onProjectCreated }) {
 	);
 }
 
-export default CreateProjectModal;
+export default CreateTaskModal;

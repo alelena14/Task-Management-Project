@@ -12,6 +12,8 @@ public record ProjectStatsResponse(
 
         long inProgress,
 
+        long overdue,
+
         long done
 ) {
 }

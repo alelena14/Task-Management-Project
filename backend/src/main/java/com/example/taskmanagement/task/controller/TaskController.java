@@ -1,6 +1,7 @@
 package com.example.taskmanagement.task.controller;
 
 import com.example.taskmanagement.task.dto.CreateTaskRequest;
+import com.example.taskmanagement.task.dto.MyTaskStatsResponse;
 import com.example.taskmanagement.task.dto.TaskResponse;
 import com.example.taskmanagement.task.dto.UpdateTaskRequest;
 import com.example.taskmanagement.task.entity.TaskPriority;
@@ -9,6 +10,7 @@ import com.example.taskmanagement.task.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +56,14 @@ public class TaskController {
 
         return taskService
                 .getMyTasks(pageable);
+    }
+
+    @GetMapping("/my-tasks/stats")
+    public ResponseEntity<MyTaskStatsResponse> getMyTaskStats() {
+
+        return ResponseEntity.ok(
+                taskService.getMyTaskStats()
+        );
     }
 
     @PutMapping("/{id}")

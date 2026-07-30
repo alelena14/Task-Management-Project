@@ -27,6 +27,8 @@ public interface TaskService {
             Pageable pageable
     );
 
+    MyTaskStatsResponse getMyTaskStats();
+
     TaskResponse update(
             Long id,
             UpdateTaskRequest request

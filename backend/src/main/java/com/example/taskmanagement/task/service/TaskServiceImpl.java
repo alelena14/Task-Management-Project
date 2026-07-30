@@ -8,6 +8,7 @@ import com.example.taskmanagement.exception.ResourceNotFoundException;
 import com.example.taskmanagement.project.entity.Project;
 import com.example.taskmanagement.project.repository.ProjectRepository;
 import com.example.taskmanagement.task.dto.CreateTaskRequest;
+import com.example.taskmanagement.task.dto.MyTaskStatsResponse;
 import com.example.taskmanagement.task.dto.TaskResponse;
 import com.example.taskmanagement.task.dto.UpdateTaskRequest;
 import com.example.taskmanagement.task.entity.Task;
@@ -25,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -420,7 +423,10 @@ public class TaskServiceImpl implements TaskService {
                 task.getStatus(),
                 task.getDeadline(),
                 task.getAssignedUser() != null
-                        ? task.getAssignedUser().getFirstName()
+                        ? task.getAssignedUser().getId()
+                        : null,
+                task.getAssignedUser() != null
+                        ? task.getAssignedUser().getFirstName() + " " + task.getAssignedUser().getLastName()
                         : null,
                 task.getCreator().getFirstName(),
                 task.getProject().getId(),
@@ -452,5 +458,74 @@ public class TaskServiceImpl implements TaskService {
                 );
             }
         }
+    }
+
+    @Override
+    public MyTaskStatsResponse getMyTaskStats() {
+
+        User currentUser = getAuthenticatedUser();
+
+        List<Task> tasks =
+                taskRepository.findByAssignedUserIdAndDeletedFalse(
+                        currentUser.getId()
+                );
+
+        LocalDate today = LocalDate.now();
+        LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY);
+
+        long totalTasks = tasks.size();
+
+        long todo = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.TODO)
+                .count();
+
+
+        long inProgress = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.IN_PROGRESS)
+                .count();
+
+
+        long done = tasks.stream()
+                .filter(task -> task.getStatus() == TaskStatus.DONE)
+                .count();
+
+
+        long overdue = tasks.stream()
+                .filter(task -> {
+                    LocalDate deadline = task.getDeadline().toLocalDate();
+
+                    return task.getStatus() != TaskStatus.DONE
+                            && deadline.isBefore(today);
+                })
+                .count();
+
+
+        long dueToday = tasks.stream()
+                .filter(task ->
+                        task.getDeadline()
+                                .toLocalDate()
+                                .isEqual(today))
+                .count();
+
+
+        long dueThisWeek = tasks.stream()
+                .filter(task -> {
+                    LocalDate deadline = task.getDeadline().toLocalDate();
+
+                    return !deadline.isBefore(today)
+                            && !deadline.isAfter(endOfWeek);
+                })
+                .count();
+
+
+        return MyTaskStatsResponse.builder()
+                .totalTasks(totalTasks)
+                .todo(todo)
+                .inProgress(inProgress)
+                .done(done)
+                .overdue(overdue)
+                .dueToday(dueToday)
+                .dueThisWeek(dueThisWeek)
+                .build();
     }
 }
