@@ -7,10 +7,13 @@ export default function TaskBoardCard({
 	task,
 	currentUser,
 	onClick,
-	isOwner,
+	isOwnerOrAdmin,
+	project,
 	onDelete,
 }) {
-	const canDrag = task.assignedUserId === currentUser?.id || isOwner;
+	const canDrag =
+		project.status === "ACTIVE" &&
+		(task.assignedUserId === currentUser?.id || isOwnerOrAdmin);
 
 	const { attributes, listeners, setNodeRef, transform } = useDraggable({
 		id: task.id,
@@ -50,7 +53,7 @@ export default function TaskBoardCard({
 						{task.priority}
 					</span>
 
-					{isOwner && (
+					{isOwnerOrAdmin && (
 						<button
 							onClick={(e) => {
 								e.stopPropagation();

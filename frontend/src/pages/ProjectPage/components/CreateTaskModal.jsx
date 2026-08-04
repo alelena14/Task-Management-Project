@@ -11,6 +11,7 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated, project }) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const modalRef = useRef(null);
 	const createTaskMutation = useCreateTask();
+	const [error, setError] = useState("");
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -30,7 +31,22 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated, project }) {
 	};
 
 	const handleCreateTask = async () => {
-		if (!title) return;
+		setError("");
+
+		if (!title.trim()) {
+			setError("Task title is required.");
+			return;
+		}
+
+		if (!deadline) {
+			setError("Deadline is required.");
+			return;
+		}
+
+		if (!assignedUserId) {
+			setError("Assigned user is required.");
+			return;
+		}
 
 		setIsSubmitting(true);
 
@@ -49,10 +65,11 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated, project }) {
 			setPriority("LOW");
 			setDeadline("");
 			setAssignedUserId("");
+			setError("");
 
 			onClose();
 		} catch (error) {
-			console.error(error);
+			setError(error.response?.data?.message || "Failed to create task.");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -159,6 +176,10 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated, project }) {
 						</select>
 					</div>
 				</div>
+
+				{error && (
+					<p className="px-6 pb-2 text-sm text-red-600">{error}</p>
+				)}
 
 				{/* Footer */}
 				<div className="flex gap-3 px-6 pb-6">

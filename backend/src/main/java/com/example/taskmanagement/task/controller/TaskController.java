@@ -51,11 +51,19 @@ public class TaskController {
 
     @GetMapping("/my-tasks")
     public Page<TaskResponse> getMyTasks(
+            @RequestParam(required = false)
+            TaskStatus status,
+
+            @RequestParam(required = false)
+            TaskPriority priority,
+
             @ParameterObject Pageable pageable
     ) {
 
         return taskService
-                .getMyTasks(pageable);
+                .getMyTasks(status,
+                        priority,
+                        pageable);
     }
 
     @GetMapping("/my-tasks/stats")

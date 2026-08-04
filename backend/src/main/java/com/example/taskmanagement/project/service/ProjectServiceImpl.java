@@ -16,6 +16,7 @@ import com.example.taskmanagement.user.entity.Role;
 import com.example.taskmanagement.user.entity.User;
 import com.example.taskmanagement.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -145,8 +146,7 @@ public class ProjectServiceImpl implements ProjectService {
             project.setStatus(request.status());
         }
 
-        Project updatedProject =
-                projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
 
         auditService.log(
                 AuditAction.UPDATE_PROJECT,

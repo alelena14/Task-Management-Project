@@ -19,8 +19,10 @@ public record CreateTaskRequest(
         @NotNull(message = "Priority is required")
         TaskPriority priority,
 
+        @NotNull(message = "Deadline is required")
         LocalDateTime deadline,
 
+        @NotNull(message = "Assigned user is required")
         Long assignedUserId,
 
         @NotNull(message = "Project id is required")

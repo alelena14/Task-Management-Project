@@ -7,6 +7,7 @@ import ProtectedRoute from "./ProtectedRoutes.jsx";
 import ProjectPage from "./pages/ProjectPage/ProjectsPage.jsx";
 import SingleProjectPage from "./pages/ProjectPage/SingleProjectPage.jsx";
 import TasksPage from "./pages/TasksPage/TasksPage.jsx";
+import AdminPanelPage from "./pages/AdminPanelPage/AdminPanelPage.jsx";
 
 export default function App() {
 	return (
@@ -18,7 +19,7 @@ export default function App() {
 
 				{/* Protected */}
 				<Route
-					path="/home"
+					path="/"
 					element={
 						<ProtectedRoute>
 							<HomePage />
@@ -49,6 +50,15 @@ export default function App() {
 					element={
 						<ProtectedRoute>
 							<TasksPage />
+						</ProtectedRoute>
+					}
+				/>
+
+				<Route
+					path="/admin"
+					element={
+						<ProtectedRoute>
+							<AdminPanelPage />
 						</ProtectedRoute>
 					}
 				/>

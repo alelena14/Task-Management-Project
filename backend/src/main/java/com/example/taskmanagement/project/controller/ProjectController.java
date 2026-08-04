@@ -48,7 +48,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{projectId}")
-    public ResponseEntity<ProjectResponse> updateProject(
+    public ResponseEntity<ProjectResponse> updateProject (
             @PathVariable Long projectId,
             @Valid @RequestBody UpdateProjectRequest request
     ) {

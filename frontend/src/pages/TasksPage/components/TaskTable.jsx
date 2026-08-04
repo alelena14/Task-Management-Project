@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 import ProjectTag from "../../../components/ui/ProjectTag.jsx";
 import PriorityTag from "../../../components/ui/PriorityTag.jsx";
 import { formatDeadline } from "../../../utils/Utils.jsx";
+import StatusTag from "../../../components/ui/StatusTag.jsx";
 
 const PAGE_SIZE = 4;
 
@@ -31,13 +32,13 @@ export default function TasksTable({ tasks, onTaskClick }) {
 	return (
 		<div className="flex flex-col">
 			<table className="w-full">
-				<thead className="border-b bg-gray-50">
+				<thead className="border-b bg-gray-50 border-t">
 					<tr className="text-left text-xs uppercase tracking-wide text-gray-500">
-						<th className="p-4">Task</th>
-						<th>Priority</th>
-						<th>Status</th>
-						<th>Project</th>
-						<th>Deadline</th>
+						<th className="w-[35%] p-4">Task</th>
+						<th className="w-[15%]">Priority</th>
+						<th className="w-[18%]">Status</th>
+						<th className="w-[17%]">Project</th>
+						<th className="w-[15%]">Deadline</th>
 					</tr>
 				</thead>
 
@@ -46,7 +47,7 @@ export default function TasksTable({ tasks, onTaskClick }) {
 						<tr
 							key={task.id}
 							onClick={() => onTaskClick(task)}
-							className="border-b hover:bg-gray-50 transition cursor-pointer"
+							className="border-b hover:bg-gray-50 transition cursor-pointer border-x"
 						>
 							<td className="p-4">
 								<p className="font-semibold text-[#34113F]">
@@ -65,9 +66,7 @@ export default function TasksTable({ tasks, onTaskClick }) {
 							</td>
 
 							<td>
-								<span className="text-sm font-fabrikat">
-									{task.status.replace("_", " ")}
-								</span>
+								<StatusTag status={task.status} />
 							</td>
 
 							<td>
@@ -80,7 +79,7 @@ export default function TasksTable({ tasks, onTaskClick }) {
 							</td>
 
 							<td>
-								<div className="flex items-center gap-2 text-sm">
+								<div className="flex items-center gap-2 text-sm text-gray-600">
 									<Clock3 size={16} />
 									<p>{formatDeadline(task.deadline)}</p>
 								</div>
@@ -90,8 +89,8 @@ export default function TasksTable({ tasks, onTaskClick }) {
 				</tbody>
 			</table>
 
-			<div className="flex items-center justify-between px-4 py-3 border-t">
-				<span className="text-xs font-fabrikat text-gray-400">
+			<div className="flex items-center justify-between px-4 py-3 border-b">
+				<span className="text-xs font-fabrikat text-gray-700">
 					Showing {from}-{to} of {tasks.length} tasks
 				</span>
 

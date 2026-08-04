@@ -2,22 +2,16 @@ import Navbar from "../../components/layout/Navbar.jsx";
 import React, { useState } from "react";
 import { Plus, UserPlus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-	closestCorners,
-	DndContext,
-	DragOverlay,
-	PointerSensor,
-	useSensor,
-	useSensors,
-} from "@dnd-kit/core";
+import { closestCorners, DndContext, DragOverlay } from "@dnd-kit/core";
 import CreateTaskModal from "./components/CreateTaskModal.jsx";
-import { useCurrentUser } from "../../hooks/useUser.js";
+import { useCurrentUser } from "../../hooks/useUsers.js";
 import {
 	useDeleteProject,
 	useInviteMember,
 	useProject,
 	useProjectStats,
 	useProjectTasks,
+	useUpdateProject,
 } from "../../hooks/useProject.js";
 import { useDeleteTask, useUpdateTask } from "../../hooks/useTasks.jsx";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +20,7 @@ import KanbanColumn from "./components/KanbanColumn.jsx";
 import ProjectTag from "../../components/ui/ProjectTag.jsx";
 import StatsGrid from "../../components/layout/StatsGrid.jsx";
 import { TaskSidebar } from "../HomePage/components/TaskSidebar.jsx";
+import ProjectStatusTag from "../../components/ui/ProjectStatusTag.jsx";
 
 function SingleProjectsPage() {
 	// Routing
@@ -60,16 +55,11 @@ function SingleProjectsPage() {
 	const inviteMemberMutation = useInviteMember();
 	const deleteProjectMutation = useDeleteProject();
 	const deleteTaskMutation = useDeleteTask();
+	const updateProjectMutation = useUpdateProject();
 
 	// Permissions
-	const isOwner = currentUser?.id === project?.ownerId;
-
-	// DnD Sensors
-	const sensors = useSensors(
-		useSensor(PointerSensor, {
-			activationConstraint: { distance: 5 },
-		}),
-	);
+	const isOwnerOrAdmin =
+		currentUser?.id === project?.ownerId || currentUser?.role === "ADMIN";
 
 	if (!project) {
 		return null;
@@ -118,17 +108,10 @@ function SingleProjectsPage() {
 			await updateTaskMutation.mutateAsync({
 				taskId,
 				body: {
-					title: task.title,
-					description: task.description,
-					priority: task.priority,
 					status: newStatus,
-					deadline: task.deadline,
-					assignedUserId: task.assignedUserId,
 				},
 			});
 		} catch (error) {
-			console.error(error);
-
 			queryClient.setQueryData(["tasks", project.id], previousTasks);
 			queryClient.setQueryData(["stats", project.id], previousStats);
 		}
@@ -153,7 +136,6 @@ function SingleProjectsPage() {
 	const handleDeleteProject = async () => {
 		try {
 			await deleteProjectMutation.mutateAsync(project.id);
-
 			navigate("/projects");
 		} catch (error) {
 			console.error(error);
@@ -232,6 +214,30 @@ function SingleProjectsPage() {
 		}
 	};
 
+	// Toggle project status
+	const handleToggleProjectStatus = async () => {
+		const newStatus = project.status === "ACTIVE" ? "COMPLETED" : "ACTIVE";
+
+		try {
+			await updateProjectMutation.mutateAsync({
+				projectId: project.id,
+				body: {
+					status: newStatus,
+				},
+			});
+
+			await queryClient.invalidateQueries({
+				queryKey: ["project", project.id],
+			});
+
+			await queryClient.invalidateQueries({
+				queryKey: ["projects"],
+			});
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
 	const todoTasks = tasks.filter((task) => task.status === "TODO");
 	const doingTasks = tasks.filter((task) => task.status === "IN_PROGRESS");
 	const doneTasks = tasks.filter((task) => task.status === "DONE");
@@ -296,7 +302,7 @@ function SingleProjectsPage() {
 							</div>
 						)}
 
-						{isOwner && (
+						{isOwnerOrAdmin && (
 							<button
 								onClick={() => setShowInvite((prev) => !prev)}
 								className="w-full flex items-center justify-center gap-2 border border-gray-300 text-sm font-fabrikat text-[#34113F] py-2.5 hover:bg-gray-50 transition-colors"
@@ -313,9 +319,7 @@ function SingleProjectsPage() {
 					<div className="flex items-start justify-between">
 						<div className="flex flex-col gap-3">
 							<div className="flex items-center gap-3">
-								<span className="text-[10px] font-fabrikat tracking-wide bg-violet-100 text-violet-700 px-2 py-1 uppercase">
-									{project.status}
-								</span>
+								<ProjectStatusTag status={project.status} />
 								<ProjectTag project={`PROJ-${project.id}`} />
 							</div>
 							<p className="text-4xl text-[#34113F] font-rotunda leading-tight">
@@ -323,8 +327,16 @@ function SingleProjectsPage() {
 							</p>
 						</div>
 
-						{isOwner && (
+						{isOwnerOrAdmin && (
 							<div className="flex gap-3">
+								<button
+									onClick={handleToggleProjectStatus}
+									className="border border-[#34113F] text-[#34113F] px-4 py-2 text-sm font-fabrikat hover:bg-[#34113F] hover:text-white"
+								>
+									{project.status === "ACTIVE"
+										? "Mark as Completed"
+										: "Mark as Active"}
+								</button>
 								<button
 									onClick={() => setIsTaskModalOpen(true)}
 									className="flex items-center gap-2 bg-[#34113F] text-white text-sm font-fabrikat tracking-wide px-4 py-2.5 hover:bg-[#4a1b58] transition-colors"
@@ -352,7 +364,6 @@ function SingleProjectsPage() {
 						</p>
 					) : (
 						<DndContext
-							sensors={sensors}
 							collisionDetection={closestCorners}
 							onDragEnd={handleDragEnd}
 						>
@@ -363,7 +374,8 @@ function SingleProjectsPage() {
 									dotColor="#9CA3AF"
 									tasks={todoTasks}
 									currentUser={currentUser}
-									isOwner={isOwner}
+									isOwnerOrAdmin={isOwnerOrAdmin}
+									project={project}
 									onTaskClick={pickTask}
 									onDeleteTask={handleTaskDelete}
 								/>
@@ -374,7 +386,8 @@ function SingleProjectsPage() {
 									tasks={doingTasks}
 									accent
 									currentUser={currentUser}
-									isOwner={isOwner}
+									isOwnerOrAdmin={isOwnerOrAdmin}
+									project={project}
 									onTaskClick={pickTask}
 									onDeleteTask={handleTaskDelete}
 								/>
@@ -385,7 +398,8 @@ function SingleProjectsPage() {
 									tasks={doneTasks}
 									accent
 									currentUser={currentUser}
-									isOwner={isOwner}
+									isOwnerOrAdmin={isOwnerOrAdmin}
+									project={project}
 									onTaskClick={pickTask}
 									onDeleteTask={handleTaskDelete}
 								/>
@@ -396,7 +410,7 @@ function SingleProjectsPage() {
 									<TaskBoardCard
 										task={activeTask}
 										currentUser={currentUser}
-										isOwner={isOwner}
+										isOwnerOrAdmin={isOwnerOrAdmin}
 									/>
 								) : null}
 							</DragOverlay>

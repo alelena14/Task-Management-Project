@@ -27,6 +27,11 @@ export async function createProject(body) {
 	return data;
 }
 
+export const updateProject = async ({ projectId, body }) => {
+	const { data } = await api.put(`/projects/${projectId}`, body);
+	return data;
+};
+
 export const deleteProject = async (projectId) => {
 	const { data } = await api.delete(`/projects/${projectId}`);
 	return data;

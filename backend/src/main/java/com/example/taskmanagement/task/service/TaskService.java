@@ -19,11 +19,14 @@ public interface TaskService {
     );
 
     Page<TaskResponse> getAll(
-
             TaskStatus status,
-
             TaskPriority priority,
+            Pageable pageable
+    );
 
+    Page<TaskResponse> getMyTasks(
+            TaskStatus status,
+            TaskPriority priority,
             Pageable pageable
     );
 
@@ -38,7 +41,5 @@ public interface TaskService {
             Long id
     );
 
-    Page<TaskResponse> getMyTasks(
-            Pageable pageable
-    );
-}
+
+    }

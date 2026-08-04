@@ -3,6 +3,7 @@ import React from "react";
 import { ClockCheckIcon } from "lucide-react";
 import { useProjectStats } from "../../../hooks/useProject.js";
 import { formatDeadline } from "../../../utils/Utils.jsx";
+import ProjectStatusTag from "../../../components/ui/ProjectStatusTag.jsx";
 
 export function ProjectSidebar({ project, onClose }) {
 	if (!project) return null;
@@ -15,9 +16,7 @@ export function ProjectSidebar({ project, onClose }) {
 				<p className="font-rotunda text-[#34113F] text-2xl leading-snug pr-2">
 					{project.name}
 				</p>
-				<span className="text-xs font-fabrikat border bg-gray-200 p-1 text-black">
-					{project.status}
-				</span>
+				<ProjectStatusTag status={project.status} />
 			</SidebarHeader>
 
 			<div

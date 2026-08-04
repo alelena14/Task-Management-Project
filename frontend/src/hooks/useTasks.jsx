@@ -7,10 +7,10 @@ import {
 	updateTask,
 } from "../api/tasks";
 
-export function useMyTasks() {
+export function useMyTasks({ status, priority } = {}) {
 	return useQuery({
-		queryKey: ["myTasks"],
-		queryFn: () => getMyTasks(),
+		queryKey: ["myTasks", status, priority],
+		queryFn: () => getMyTasks(status, priority),
 	});
 }
 

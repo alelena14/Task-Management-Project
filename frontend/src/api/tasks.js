@@ -15,8 +15,14 @@ export const createTask = async (body) => {
 	return data;
 };
 
-export const getMyTasks = async () => {
-	const { data } = await api.get("/tasks/my-tasks");
+export const getMyTasks = async (status, priority) => {
+	const { data } = await api.get("/tasks/my-tasks", {
+		params: {
+			status: status || undefined,
+			priority: priority || undefined,
+		},
+	});
+
 	return data.content;
 };
 

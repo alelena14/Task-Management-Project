@@ -9,8 +9,9 @@ export default function KanbanColumn({
 	accent,
 	onTaskClick,
 	id,
+	project,
 	currentUser,
-	isOwner,
+	isOwnerOrAdmin,
 	onDeleteTask,
 }) {
 	const { setNodeRef } = useDroppable({
@@ -47,7 +48,8 @@ export default function KanbanColumn({
 						key={task.id}
 						task={task}
 						currentUser={currentUser}
-						isOwner={isOwner}
+						isOwnerOrAdmin={isOwnerOrAdmin}
+						project={project}
 						onClick={() => onTaskClick(task)}
 						onDelete={onDeleteTask}
 					/>

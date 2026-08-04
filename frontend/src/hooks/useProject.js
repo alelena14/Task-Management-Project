@@ -7,6 +7,7 @@ import {
 	getProjects,
 	getProjectStats,
 	inviteMember,
+	updateProject,
 } from "../api/projects";
 
 export function useProject(projectId) {
@@ -67,6 +68,24 @@ export function useInviteMember() {
 
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
+			});
+		},
+	});
+}
+
+export function useUpdateProject() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: updateProject,
+
+		onSuccess: (updatedProject) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects"],
+			});
+
+			queryClient.invalidateQueries({
+				queryKey: ["project", updatedProject.id],
 			});
 		},
 	});

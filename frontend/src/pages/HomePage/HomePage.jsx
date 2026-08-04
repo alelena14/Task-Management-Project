@@ -7,6 +7,7 @@ import { TaskSidebar } from "./components/TaskSidebar.jsx";
 import { useNavigate } from "react-router-dom";
 import { useMyTasks } from "../../hooks/useTasks.jsx";
 import { useProjects } from "../../hooks/useProject.js";
+import NotesPanel from "./components/NotesPanel.jsx";
 
 function HomePage() {
 	const [selectedTask, setSelectedTask] = useState(null);
@@ -24,9 +25,9 @@ function HomePage() {
 
 	const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
 
-	const { data: tasks, isLoading: isTasksLoading } = useMyTasks();
+	const { data: tasks = [], isLoading: isTasksLoading } = useMyTasks();
 
-	const displayedProjects = projects.slice(0, 3);
+	const displayedProjects = projects.slice(0, 4);
 	const displayedTasks = tasks.slice(0, 3);
 
 	const isLoading = isProjectsLoading || isTasksLoading;
@@ -48,8 +49,8 @@ function HomePage() {
 				</div>
 
 				{/* Projects */}
-				<div className="flex flex-col gap-4 p-4 max-w-6xl">
-					<div className="flex flex-row gap-2 justify-between">
+				<div className="flex flex-col gap-4 p-4 max-w-336">
+					<div className="flex flex-row gap-6">
 						<p className=" text-xl text-[#34113F] font-rotunda">
 							Your Projects
 						</p>
@@ -62,9 +63,9 @@ function HomePage() {
 						</p>
 					</div>
 
-					<div className="grid grid-cols-3 gap-12">
+					<div className="grid grid-cols-4 gap-12">
 						{isLoading ? (
-							Array.from({ length: 3 }).map((_, index) => (
+							Array.from({ length: 4 }).map((_, index) => (
 								<ProjectCardSkeleton key={index} />
 							))
 						) : displayedProjects.length === 0 ? (
@@ -85,9 +86,9 @@ function HomePage() {
 				</div>
 
 				{/* Tasks */}
-				<div>
+				<div className="flex gap-14.5">
 					<div className="flex flex-col gap-4 p-4">
-						<div className="flex flex-row gap-2 w-2/5	 justify-between">
+						<div className="flex flex-row gap-6 w-full">
 							<p className="text-xl text-[#34113F] font-rotunda">
 								Your Tasks
 							</p>
@@ -110,7 +111,7 @@ function HomePage() {
 								))}
 							</div>
 						) : displayedTasks.length === 0 ? (
-							<p className="text-sm text-gray-500">
+							<p className="text-sm w-156 text-gray-500">
 								No tasks found.
 							</p>
 						) : (
@@ -125,6 +126,9 @@ function HomePage() {
 								))}
 							</div>
 						)}
+					</div>
+					<div className="w-2/5 pt-15">
+						<NotesPanel />
 					</div>
 				</div>
 			</div>

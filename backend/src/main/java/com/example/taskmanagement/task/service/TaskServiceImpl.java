@@ -6,6 +6,7 @@ import com.example.taskmanagement.exception.BusinessException;
 import com.example.taskmanagement.exception.ForbiddenException;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
 import com.example.taskmanagement.project.entity.Project;
+import com.example.taskmanagement.project.entity.ProjectStatus;
 import com.example.taskmanagement.project.repository.ProjectRepository;
 import com.example.taskmanagement.task.dto.CreateTaskRequest;
 import com.example.taskmanagement.task.dto.MyTaskStatsResponse;
@@ -154,7 +155,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     public Page<TaskResponse> getAll(
-
             TaskStatus status,
             TaskPriority priority,
             Pageable pageable
@@ -168,36 +168,11 @@ public class TaskServiceImpl implements TaskService {
 
         if (user.getRole() == Role.ADMIN) {
 
-            if (status != null && priority != null) {
-
-                tasks = taskRepository
-                        .findByDeletedFalseAndStatusAndPriority(
-                                status,
-                                priority,
-                                pageable
-                        );
-
-            } else if (status != null) {
-
-                tasks = taskRepository
-                        .findByDeletedFalseAndStatus(
-                                status,
-                                pageable
-                        );
-
-            } else if (priority != null) {
-
-                tasks = taskRepository
-                        .findByDeletedFalseAndPriority(
-                                priority,
-                                pageable
-                        );
-
-            } else {
-
-                tasks = taskRepository
-                        .findByDeletedFalse(pageable);
-            }
+            tasks =  taskRepository.findAllWithFilters(
+                    status,
+                    priority,
+                    pageable
+            );
 
         } else {
 
@@ -207,6 +182,26 @@ public class TaskServiceImpl implements TaskService {
                             pageable
                     );
         }
+
+        return tasks.map(this::mapToResponse);
+    }
+
+    public Page<TaskResponse> getMyTasks(
+            TaskStatus status,
+            TaskPriority priority,
+            Pageable pageable
+    ) {
+
+        User currentUser = getAuthenticatedUser();
+
+        validateSortFields(pageable);
+
+        Page<Task> tasks = taskRepository.findMyTasksWithFilters(
+                currentUser.getId(),
+                status,
+                priority,
+                pageable
+        );
 
         return tasks.map(this::mapToResponse);
     }
@@ -221,6 +216,14 @@ public class TaskServiceImpl implements TaskService {
                         new ResourceNotFoundException(
                                 "Task not found"
                         ));
+
+        Project project = task.getProject();
+
+        if (project.getStatus() == ProjectStatus.COMPLETED) {
+            throw new ForbiddenException(
+                    "Tasks in a completed project cannot be modified."
+            );
+        }
 
         boolean isAdmin =
                 currentUser.getRole() == Role.ADMIN;
@@ -378,24 +381,6 @@ public class TaskServiceImpl implements TaskService {
                 savedTask.getId(),
                 currentUser.getEmail()
         );
-    }
-
-    public Page<TaskResponse> getMyTasks(
-            Pageable pageable
-    ) {
-
-        User currentUser =
-                getAuthenticatedUser();
-
-        Page<Task> tasks =
-                taskRepository
-                        .findByAssignedUserIdAndDeletedFalse(
-                                currentUser.getId(),
-                                pageable
-                        );
-
-        return tasks
-                .map(this::mapToResponse);
     }
 
     // internal service methods

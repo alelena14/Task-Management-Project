@@ -38,7 +38,8 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.isActive()
         );
     }
 
@@ -66,7 +67,8 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.isActive()
         );
     }
 
@@ -79,7 +81,8 @@ public class UserService {
                         user.getFirstName(),
                         user.getLastName(),
                         user.getEmail(),
-                        user.getRole()
+                        user.getRole(),
+                        user.isActive()
                 ))
                 .toList();
     }
@@ -121,7 +124,8 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.isActive()
         );
     }
 

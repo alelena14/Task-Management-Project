@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowRightIcon } from "lucide-react";
 import ProjectTag from "../../../components/ui/ProjectTag.jsx";
+import ProjectStatusTag from "../../../components/ui/ProjectStatusTag.jsx";
 
 export default function ProjectCard2({ project, onClick, active }) {
 	const { id, name, description, status, members, progress } = project;
@@ -15,9 +16,7 @@ export default function ProjectCard2({ project, onClick, active }) {
 				<ProjectTag project={`PROJ-${id}`} />
 
 				<div className="flex absolute top-4 right-4 justify-end">
-					<span className="text-xs font-fabrikat border bg-gray-200 p-1 text-black">
-						{status}
-					</span>
+					<ProjectStatusTag status={status} />
 				</div>
 
 				<p className="mt-2 text-lg font-rotunda text-[#44294d] text-left">

@@ -8,9 +8,13 @@ import {
 import TasksTable from "./components/TaskTable.jsx";
 import { TaskSidebar } from "../HomePage/components/TaskSidebar.jsx";
 import React, { useState } from "react";
+import { FilterPanel } from "./components/FIlterPanel.jsx";
 
 function TasksPage() {
-	const { data: tasks = [], isLoading } = useMyTasks();
+	const [status, setStatus] = useState("");
+	const [priority, setPriority] = useState("");
+
+	const { data: tasks = [], isLoading } = useMyTasks({ status, priority });
 	const { data: stats } = useMyTaskStats();
 
 	const [selectedTask, setSelectedTask] = useState(null);
@@ -36,7 +40,7 @@ function TasksPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-[#f7f7f7]">
+		<div className="min-h-screen bg-[#e8ebe4]">
 			<Navbar />
 
 			<div className="max-w-7xl p-8 pl-12">
@@ -65,6 +69,15 @@ function TasksPage() {
 								/>
 							)}
 						</div>
+					</div>
+
+					<div className="col-span-1">
+						<FilterPanel
+							status={status}
+							setStatus={setStatus}
+							priority={priority}
+							setPriority={setPriority}
+						/>
 					</div>
 				</div>
 			</div>
